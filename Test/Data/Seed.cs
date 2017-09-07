@@ -17,6 +17,7 @@ namespace Test.Data
             var product2 = new Product() { Name = "Sony SmartTv", Price = 1000, Category = category1 };
 
             context.Products.AddRange(product1, product2);
+            context.Categories.AddRange(category1, category2, category3);
             context.SaveChanges();
         }
     }

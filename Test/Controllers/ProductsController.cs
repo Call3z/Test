@@ -10,6 +10,7 @@ using Test.Data.Models;
 using Test.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using Test.Services;
 
 namespace Test.Controllers
 {
@@ -18,11 +19,13 @@ namespace Test.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger _logger;
+        private readonly ProductCategoryService _service;
 
-        public ProductsController(ApplicationDbContext context, ILogger<ProductsController> logger)
+        public ProductsController(ApplicationDbContext context, ILogger<ProductsController> logger, ProductCategoryService service)
         {
             _logger = logger;
             _context = context;
+            _service = service;
         }
 
         // GET: Products
@@ -54,18 +57,10 @@ namespace Test.Controllers
         public IActionResult Create()
         {
             var viewModel = new ProductViewModel();
-            var categories = _context.Categories.ToList();
 
-            if (categories != null)
-            {
-                List<SelectListItem> list = new List<SelectListItem>();
-                foreach (var category in categories)
-                {
-                    list.Add(new SelectListItem() { Selected = false, Text = category.Name, Value = category.Id.ToString()});
-                }
+            var categories = _service.GetSelectList();
 
-                viewModel.Categories = list;
-            }
+            viewModel.Categories = categories;
 
             return View(viewModel);
         }
@@ -98,7 +93,7 @@ namespace Test.Controllers
             }
 
             var product = await _context.Products.Include(x=> x.Category).SingleOrDefaultAsync(m => m.Id == id);
-            var categories = await _context.Categories.ToListAsync();
+            var categories = _service.GetSelectList();
 
             if (product == null)
             {
@@ -107,18 +102,8 @@ namespace Test.Controllers
 
             var viewModel = new ProductViewModel();
             viewModel.Product = product;
-
-            if(categories != null)
-            {
-                List<SelectListItem> list = new List<SelectListItem>();
-                foreach(var category in categories)
-                {
-                    list.Add(new SelectListItem() { Selected = false, Text = category.Name, Value = category.Id.ToString()});
-                }
-
-                viewModel.Categories = list;
-                viewModel.SelectedCategory = product.CategoryId;
-            }
+            viewModel.Categories = categories;
+            viewModel.SelectedCategory = product.CategoryId;
 
             return View(viewModel);
         }
