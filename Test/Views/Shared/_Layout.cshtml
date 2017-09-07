@@ -44,9 +44,7 @@
     <div class="container body-content">
         @RenderBody()
         <hr />
-        <footer>
-            <p>&copy; 2017 - Test</p>
-        </footer>
+        @{Html.RenderPartial("_FooterPartial");}
     </div>
 
     <environment include="Development">
