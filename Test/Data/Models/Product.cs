@@ -13,5 +13,8 @@ namespace Test.Data.Models
         public string Name { get; set; }
         [Range(5,1000)]
         public decimal Price { get; set; }
+
+        public ProductCategory Category { get; set; }
+        public int CategoryId { get; set; }
     }
 }
