@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Test.Data;
 using Test.Data.Models;
+using Test.Models.ViewModels;
 
 namespace Test.Controllers
 {
@@ -22,6 +23,7 @@ namespace Test.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
+            var test = _context.Products.ToList();
             return View(await _context.Products.ToListAsync());
         }
 
@@ -46,7 +48,21 @@ namespace Test.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            return View();
+            var viewModel = new ProductViewModel();
+            var categories = _context.Categories.ToList();
+
+            if (categories != null)
+            {
+                List<SelectListItem> list = new List<SelectListItem>();
+                foreach (var category in categories)
+                {
+                    list.Add(new SelectListItem() { Selected = false, Text = category.Name, Value = category.Id.ToString()});
+                }
+
+                viewModel.Categories = list;
+            }
+
+            return View(viewModel);
         }
 
         // POST: Products/Create
@@ -54,15 +70,18 @@ namespace Test.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Price")] Product product)
+        public async Task<IActionResult> Create(ProductViewModel model)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(product);
+                var category = await _context.Categories.FirstOrDefaultAsync(x => x.Id == model.SelectedCategory);
+
+                model.Product.Category = category;
+                _context.Add(model.Product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+            return View(model);
         }
 
         // GET: Products/Edit/5
@@ -73,12 +92,30 @@ namespace Test.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products.SingleOrDefaultAsync(m => m.Id == id);
+            var product = await _context.Products.Include(x=> x.Category).SingleOrDefaultAsync(m => m.Id == id);
+            var categories = await _context.Categories.ToListAsync();
+
             if (product == null)
             {
                 return NotFound();
             }
-            return View(product);
+
+            var viewModel = new ProductViewModel();
+            viewModel.Product = product;
+
+            if(categories != null)
+            {
+                List<SelectListItem> list = new List<SelectListItem>();
+                foreach(var category in categories)
+                {
+                    list.Add(new SelectListItem() { Selected = false, Text = category.Name, Value = category.Id.ToString()});
+                }
+
+                viewModel.Categories = list;
+                viewModel.SelectedCategory = product.CategoryId;
+            }
+
+            return View(viewModel);
         }
 
         // POST: Products/Edit/5
@@ -86,23 +123,21 @@ namespace Test.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Price")] Product product)
+        public async Task<IActionResult> Edit(ProductViewModel model)
         {
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(product);
+                    var selectedCategory = await _context.Categories.FirstOrDefaultAsync(x => x.Id == model.SelectedCategory);
+                    model.Product.Category = selectedCategory;
+                    _context.Update(model.Product);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.Id))
+                    if (!ProductExists(model.Product.Id))
                     {
                         return NotFound();
                     }
@@ -113,7 +148,8 @@ namespace Test.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+
+            return View(model);
         }
 
         // GET: Products/Delete/5
