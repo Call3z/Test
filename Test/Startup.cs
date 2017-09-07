@@ -12,6 +12,7 @@ using Test.Data;
 using Test.Models;
 using Test.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Localization;
 
 namespace Test
 {
@@ -48,6 +49,10 @@ namespace Test
         {
             if (env.IsDevelopment())
             {
+                app.UseRequestLocalization(new RequestLocalizationOptions
+                {
+                    DefaultRequestCulture = new RequestCulture("en-US")
+                });
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();
                 app.UseDatabaseErrorPage();
