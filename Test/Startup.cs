@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Test.Data;
 using Test.Models;
 using Test.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Test
 {
@@ -35,6 +36,8 @@ namespace Test
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
+            services.AddTransient<UserManager<ApplicationUser>>();
+            services.AddTransient<RoleManager<IdentityRole>>();
 
             services.AddMvc();
         }

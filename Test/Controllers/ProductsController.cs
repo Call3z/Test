@@ -8,22 +8,27 @@ using Microsoft.EntityFrameworkCore;
 using Test.Data;
 using Test.Data.Models;
 using Test.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace Test.Controllers
 {
+    [Authorize]
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger _logger;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(ApplicationDbContext context, ILogger<ProductsController> logger)
         {
+            _logger = logger;
             _context = context;
         }
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var test = _context.Products.ToList();
+            _logger.LogWarning("With great powers comes great responsibilities");
             return View(await _context.Products.ToListAsync());
         }
 
